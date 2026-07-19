@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Axion",
-  "version": "1.1.0",
+  "version": "1.2.0",
+  "minimum_chrome_version": "116",
   "description": "Axion AI browser assistant — understand pages and approve browser actions from a side panel",
   "permissions": ["sidePanel", "scripting", "storage", "tabs", "contextMenus"],
   "host_permissions": ["<all_urls>"],
@@ -28,7 +29,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "js": ["wait-core.js", "content.js"],
       "run_at": "document_idle"
     }
   ]

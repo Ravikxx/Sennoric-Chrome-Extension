@@ -10,15 +10,40 @@ function loadCore() {
   return context.AxionExtensionCore;
 }
 
+function loadWaitCore() {
+  const context = vm.createContext({});
+  vm.runInContext(readFileSync(resolve('wait-core.js'), 'utf8'), context);
+  return context.AxionPageWait;
+}
+
 test('extension policy requires approval for sensitive and mutating tools', () => {
   const core = loadCore();
   for (const name of ['click', 'type_text', 'select_option', 'navigate', 'take_screenshot']) {
     assert.equal(core.toolRequiresApproval(name), true, name);
   }
-  for (const name of ['read_page', 'find_elements', 'get_html', 'get_value', 'scroll']) {
+  for (const name of ['read_page', 'find_elements', 'get_html', 'get_value', 'scroll', 'wait_for_page_change']) {
     assert.equal(core.toolRequiresApproval(name), false, name);
   }
   assert.equal(core.MAX_AGENT_ROUNDS, 12);
+});
+
+test('page wait options are bounded and page changes are classified', () => {
+  const wait = loadWaitCore();
+  const normalized = wait.normalizeWaitInput({ timeout_ms: 100_000, settle_ms: -20 });
+  assert.equal(normalized.timeoutMs, 25_000);
+  assert.equal(normalized.settleMs, 0);
+  assert.equal(normalized.condition, 'any');
+  assert.throws(() => wait.normalizeWaitInput({ condition: 'selector' }), /selector is required/);
+
+  const before = { url: 'https://example.com/a', title: 'A', content_signature: '111' };
+  assert.equal(wait.detectPageChange(before, { ...before, url: 'https://example.com/b' }), 'url');
+  assert.equal(wait.detectPageChange(before, { ...before, content_signature: '222' }, 'content'), 'content');
+  assert.equal(wait.detectPageChange(
+    { ...before, selector: '#status', selector_exists: false },
+    { ...before, selector: '#status', selector_exists: true },
+    'selector',
+  ), 'selector');
+  assert.equal(wait.detectPageChange(before, before), null);
 });
 
 test('extension policy rejects unsafe navigation and non-loopback imports', () => {
@@ -62,14 +87,26 @@ test('content typing uses the correct textarea setter and focused-element fallba
   const context = vm.createContext({
     chrome: { runtime: { onMessage: { addListener() {} } } },
     window: { HTMLInputElement: InputElement, HTMLTextAreaElement: TextAreaElement, getComputedStyle() { return {}; } },
-    document: { activeElement: textarea, body, documentElement },
+    document: {
+      activeElement: textarea,
+      body,
+      documentElement,
+      title: 'Test',
+      querySelector() { return null; },
+      querySelectorAll() { return []; },
+    },
+    location: { href: 'https://example.com/' },
     Event: class Event { constructor(type) { this.type = type; } },
     Node: { ELEMENT_NODE: 1 },
     CSS: { escape: String },
   });
+  vm.runInContext(readFileSync(resolve('wait-core.js'), 'utf8'), context);
   vm.runInContext(readFileSync(resolve('content.js'), 'utf8'), context);
   const result = context.typeText({ value: 'hello' });
-  assert.deepEqual(JSON.parse(JSON.stringify(result)), { typed: 'hello', into: 'textarea' });
+  assert.equal(result.typed, 'hello');
+  assert.equal(result.into, 'textarea');
+  assert.equal(result.change_token.url, 'https://example.com/');
+  assert.ok(result.change_token.content_signature);
   assert.equal(textarea.value, 'hello');
   assert.deepEqual(textarea.events, ['input', 'change']);
 
@@ -87,4 +124,22 @@ test('sidebar loads policy before app code and no longer auto-injects page text'
   assert.match(sidebar, /MAX_AGENT_ROUNDS/);
   assert.match(sidebar, /name: 'get_value'/);
   assert.match(sidebar, /requestToolApproval/);
+  assert.match(sidebar, /name: 'wait_for_page_change'/);
+  assert.match(sidebar, /change_token/);
+});
+
+test('extension exposes the authenticated local Axion bridge controls', () => {
+  const manifest = JSON.parse(readFileSync(resolve('manifest.json'), 'utf8'));
+  const background = readFileSync(resolve('background.js'), 'utf8');
+  const html = readFileSync(resolve('sidebar.html'), 'utf8');
+  assert.equal(manifest.version, '1.2.0');
+  assert.equal(manifest.minimum_chrome_version, '116');
+  assert.match(background, /role=extension/);
+  assert.match(background, /axionBridgeToken/);
+  assert.match(background, /page\.screenshot/);
+  assert.match(background, /page\.wait/);
+  assert.match(background, /waitForPageChange/);
+  assert.match(html, /id="bridge-token"/);
+  assert.match(html, /id="bridge-indicator"/);
+  assert.deepEqual(manifest.content_scripts[0].js, ['wait-core.js', 'content.js']);
 });
