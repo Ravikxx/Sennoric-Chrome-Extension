@@ -1,12 +1,12 @@
 {
   "name": "@axion-labs-ai/chrome-extension",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "Axion AI browser assistant for Chrome",
   "type": "module",
   "scripts": {
     "test": "node --test test/*.test.js",
-    "check": "node --check background.js && node --check content.js && node --check core.js && node --check sidebar.js"
+    "check": "node --check background.js && node --check content.js && node --check core.js && node --check sidebar.js && node --check wait-core.js"
   },
   "engines": {
     "node": ">=18"

@@ -1,16 +1,19 @@
 // Runs on every page. Receives tool commands from the sidebar and executes DOM operations.
 
-chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  if (msg.action !== 'page_tool') return;
-  (async () => {
-    try {
-      sendResponse({ ok: true, result: await dispatch(msg.tool, msg.input) });
-    } catch (e) {
-      sendResponse({ ok: false, error: e.message });
-    }
-  })();
-  return true;
-});
+if (!globalThis.__axionPageToolListenerInstalled) {
+  globalThis.__axionPageToolListenerInstalled = true;
+  chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    if (msg.action !== 'page_tool') return;
+    (async () => {
+      try {
+        sendResponse({ ok: true, result: await dispatch(msg.tool, msg.input) });
+      } catch (e) {
+        sendResponse({ ok: false, error: e.message });
+      }
+    })();
+    return true;
+  });
+}
 
 async function dispatch(tool, input) {
   switch (tool) {
@@ -22,6 +25,7 @@ async function dispatch(tool, input) {
     case 'scroll':         return scroll(input);
     case 'select_option':  return selectOption(input);
     case 'get_value':      return getValue(input);
+    case 'page_state':     return getPageState(input);
     default: throw new Error(`Unknown tool: ${tool}`);
   }
 }
@@ -66,10 +70,15 @@ function findElements({ selector, text: textQuery, limit = 10 } = {}) {
 
 function clickEl({ selector, text: textQuery } = {}) {
   const el = resolveEl(selector, textQuery);
+  const changeToken = getPageState({ selector: uniqueSelector(el) });
   el.scrollIntoView({ block: 'center', behavior: 'smooth' });
   el.focus();
   el.click();
-  return { clicked: el.tagName.toLowerCase(), text: (el.innerText || el.value || '').slice(0, 60).trim() };
+  return {
+    clicked: el.tagName.toLowerCase(),
+    text: (el.innerText || el.value || '').slice(0, 60).trim(),
+    change_token: changeToken,
+  };
 }
 
 function typeText({ selector, text: textQuery, value, clear = true } = {}) {
@@ -78,6 +87,7 @@ function typeText({ selector, text: textQuery, value, clear = true } = {}) {
   if (!el || el === document.body || el === document.documentElement) {
     throw new Error('No editable element is focused');
   }
+  const changeToken = getPageState({ selector: uniqueSelector(el) });
   el.focus();
 
   if (el.isContentEditable) {
@@ -88,7 +98,7 @@ function typeText({ selector, text: textQuery, value, clear = true } = {}) {
       document.execCommand('delete', false, null);
     }
     document.execCommand('insertText', false, value);
-    return { typed: value.slice(0, 60), into: el.tagName.toLowerCase() };
+    return { typed: value.slice(0, 60), into: el.tagName.toLowerCase(), change_token: changeToken };
   }
 
   // Standard <input> / <textarea> path. Use the matching native setter so
@@ -105,29 +115,31 @@ function typeText({ selector, text: textQuery, value, clear = true } = {}) {
   nativeSetter.set.call(el, nextValue);
   el.dispatchEvent(new Event('input',  { bubbles: true }));
   el.dispatchEvent(new Event('change', { bubbles: true }));
-  return { typed: value.slice(0, 60), into: el.tagName.toLowerCase() };
+  return { typed: value.slice(0, 60), into: el.tagName.toLowerCase(), change_token: changeToken };
 }
 
 function scroll({ direction = 'down', amount = 400, selector } = {}) {
   const target = selector ? document.querySelector(selector) : window;
   if (!target) throw new Error(`No element matches "${selector}"`);
+  const changeToken = getPageState();
   const dy = direction === 'up' ? -amount : direction === 'down' ? amount : 0;
   const dx = direction === 'left' ? -amount : direction === 'right' ? amount : 0;
   if (target === window) window.scrollBy({ top: dy, left: dx, behavior: 'smooth' });
   else target.scrollBy({ top: dy, left: dx, behavior: 'smooth' });
-  return { scrolled: direction, amount };
+  return { scrolled: direction, amount, change_token: changeToken };
 }
 
 function selectOption({ selector, text: textQuery, value, label } = {}) {
   const el = resolveEl(selector, textQuery);
   if (el.tagName.toLowerCase() !== 'select') throw new Error('Element is not a <select>');
+  const changeToken = getPageState({ selector: uniqueSelector(el) });
   const opt = [...el.options].find(o =>
     (value && o.value === value) || (label && o.text.toLowerCase().includes(label.toLowerCase()))
   );
   if (!opt) throw new Error(`Option not found: ${value || label}`);
   el.value = opt.value;
   el.dispatchEvent(new Event('change', { bubbles: true }));
-  return { selected: opt.text };
+  return { selected: opt.text, change_token: changeToken };
 }
 
 function getValue({ selector, text: textQuery } = {}) {
@@ -179,4 +191,43 @@ function uniqueSelector(el) {
     node = node.parentElement;
   }
   return parts.join(' > ') || el.tagName.toLowerCase();
+}
+
+function fingerprint(value) {
+  let hash = 0x811c9dc5;
+  const text = String(value || '');
+  for (let index = 0; index < text.length; index++) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
+function getPageState({ selector = null } = {}) {
+  let selected = null;
+  if (selector) {
+    try { selected = document.querySelector(selector); }
+    catch { throw new Error(`Invalid CSS selector: "${selector}"`); }
+  }
+
+  const bodyText = (document.body?.innerText || document.body?.textContent || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 100_000);
+  const controls = [...document.querySelectorAll('input,textarea,select,[contenteditable]')]
+    .slice(0, 200)
+    .map((element) => `${element.tagName}:${element.value || element.textContent || ''}:${element.checked || false}`)
+    .join('\n');
+  const selectorSnapshot = selected
+    ? `${selected.outerHTML.slice(0, 20_000)}\n${selected.value || ''}\n${selected.textContent || ''}`
+    : '';
+
+  return AxionPageWait.normalizeToken({
+    url: location.href,
+    title: document.title,
+    content_signature: fingerprint(`${bodyText}\n${controls}\n${document.body?.childElementCount || 0}`),
+    selector,
+    selector_exists: selector ? Boolean(selected) : null,
+    selector_signature: selected ? fingerprint(selectorSnapshot) : null,
+  });
 }

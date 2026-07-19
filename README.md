@@ -3,6 +3,8 @@
 Axion is an AI browser assistant that runs in Chrome's side panel. It can read
 the current page, answer questions about it, and—with explicit approval—click,
 type, select options, navigate, or send a screenshot to the configured model.
+After an action starts a navigation or dynamic update, Axion can wait for the
+actual page change instead of relying on a fixed delay.
 
 ## Install from source
 
