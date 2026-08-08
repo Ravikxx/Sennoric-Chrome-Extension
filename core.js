@@ -27,7 +27,7 @@
   function normalizeLoopbackBaseURL(raw) {
     let url;
     try { url = new URL(String(raw || '')); }
-    catch { throw new Error('Enter a valid Axion CLI URL.'); }
+    catch { throw new Error('Enter a valid Sennoric CLI URL.'); }
     const loopbackHosts = new Set(['localhost', '127.0.0.1', '[::1]', '::1']);
     if (url.protocol !== 'http:' || !loopbackHosts.has(url.hostname)) {
       throw new Error('CLI import is restricted to an http:// loopback address.');

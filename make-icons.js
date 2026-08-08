@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Renders Axion SVG logos to PNG icons for the Chrome extension.
+// Renders Sennoric SVG logos to PNG icons for the Chrome extension.
 // Run once from the extension/ directory: node make-icons.js
 // Requires: ImageMagick (convert)
 

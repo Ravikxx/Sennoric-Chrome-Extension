@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Axion",
+  "name": "Sennoric",
   "version": "1.2.0",
   "minimum_chrome_version": "116",
-  "description": "Axion AI browser assistant — understand pages and approve browser actions from a side panel",
+  "description": "Sennoric AI browser assistant — understand pages and approve browser actions from a side panel",
   "permissions": ["sidePanel", "scripting", "storage", "tabs", "contextMenus"],
   "host_permissions": ["<all_urls>"],
   "background": {
@@ -13,7 +13,7 @@
     "default_path": "sidebar.html"
   },
   "action": {
-    "default_title": "Open Axion",
+    "default_title": "Open Sennoric",
     "default_icon": {
       "16":  "icons/icon16.png",
       "48":  "icons/icon48.png",
@@ -23,7 +23,7 @@
   "commands": {
     "_execute_side_panel": {
       "suggested_key": { "default": "Alt+Shift+A" },
-      "description": "Open Axion sidebar"
+      "description": "Open Sennoric sidebar"
     }
   },
   "content_scripts": [
