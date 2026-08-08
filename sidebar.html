@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Axion</title>
+  <title>Sennoric</title>
   <link rel="stylesheet" href="sidebar.css">
 </head>
 <body>
   <!-- Header -->
   <div id="header">
-    <span id="logo">◈ Axion</span>
+    <span id="logo">◈ Sennoric</span>
     <div id="header-right">
-      <button id="bridge-indicator" class="bridge-off" title="Axion CLI connection"><span></span> CLI</button>
+      <button id="bridge-indicator" class="bridge-off" title="Sennoric CLI connection"><span></span> CLI</button>
       <select id="model-select" title="Active model"></select>
       <button id="theme-btn" title="Toggle light / dark">☾</button>
       <button id="history-btn" title="Chat history">◷</button>
@@ -28,10 +28,10 @@
   <!-- Settings panel -->
   <div id="settings-panel" class="hidden">
     <div class="settings-section">
-      <div class="section-title">Import from Axion CLI</div>
-      <span class="hint">Run <code>/web</code>, then copy the extension import token printed by Axion.</span>
+      <div class="section-title">Import from Sennoric CLI</div>
+      <span class="hint">Run <code>/web</code>, then copy the extension import token printed by Sennoric.</span>
       <div class="import-controls">
-        <input id="import-url" type="url" value="http://127.0.0.1:3000" aria-label="Axion CLI URL">
+        <input id="import-url" type="url" value="http://127.0.0.1:3000" aria-label="Sennoric CLI URL">
         <input id="import-token" type="password" placeholder="Session import token" aria-label="Extension import token">
         <button id="import-btn">Import keys &amp; endpoints</button>
       </div>
@@ -40,13 +40,13 @@
 
     <div class="settings-section bridge-settings">
       <div class="section-title-row">
-        <div class="section-title">Connect to Axion</div>
+        <div class="section-title">Connect to Sennoric</div>
         <label class="switch-label"><input id="bridge-enabled" type="checkbox"> Enabled</label>
       </div>
-      <span class="hint">Lets Axion Desktop inspect and control Chrome through this extension. The connection stays on this computer.</span>
+      <span class="hint">Lets Sennoric Desktop inspect and control Chrome through this extension. The connection stays on this computer.</span>
       <div class="bridge-controls">
         <input id="bridge-port" type="number" min="1024" max="65535" value="3210" aria-label="Bridge port">
-        <input id="bridge-token" type="password" placeholder="Pairing token from Axion Desktop" aria-label="Bridge pairing token">
+        <input id="bridge-token" type="password" placeholder="Pairing token from Sennoric Desktop" aria-label="Bridge pairing token">
         <button id="bridge-connect-btn">Connect</button>
       </div>
       <div id="bridge-status" class="bridge-status">Not connected</div>
@@ -94,7 +94,7 @@
   <div id="input-area">
     <div id="token-bar"><span id="token-count"></span></div>
     <div id="input-row">
-      <textarea id="input" placeholder="Ask about this page, or tell Axion to do something…" rows="1"></textarea>
+      <textarea id="input" placeholder="Ask about this page, or tell Sennoric to do something…" rows="1"></textarea>
       <button id="stop-btn" class="hidden" title="Stop">◼</button>
       <button id="send-btn">↑</button>
     </div>

@@ -128,7 +128,7 @@ test('sidebar loads policy before app code and no longer auto-injects page text'
   assert.match(sidebar, /change_token/);
 });
 
-test('extension exposes the authenticated local Axion bridge controls', () => {
+test('extension exposes the authenticated local Sennoric bridge controls', () => {
   const manifest = JSON.parse(readFileSync(resolve('manifest.json'), 'utf8'));
   const background = readFileSync(resolve('background.js'), 'utf8');
   const html = readFileSync(resolve('sidebar.html'), 'utf8');

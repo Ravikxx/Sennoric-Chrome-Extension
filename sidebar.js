@@ -33,7 +33,7 @@ const PROVIDERS = {
 };
 
 const BUILTIN_MODELS = [
-  { id: 'veil',                      label: 'Veil (Axion Labs — free, slow up to 100s)',  provider: 'veil' },
+  { id: 'veil',                      label: 'Veil (Sennoric Labs — free, slow up to 100s)',  provider: 'veil' },
   { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5',  provider: 'anthropic' },
   { id: 'claude-sonnet-4-6',         label: 'Claude Sonnet 4.6', provider: 'anthropic' },
   { id: 'claude-opus-4-8',           label: 'Claude Opus 4.8',   provider: 'anthropic' },
@@ -132,7 +132,7 @@ function renderBridgeState(state = {}) {
     : state.error || ({
         disabled: 'Connection disabled',
         connecting: 'Connecting…',
-        waiting: 'Waiting for Axion CLI or Desktop…',
+        waiting: 'Waiting for Sennoric CLI or Desktop…',
         'needs-pairing': 'Pairing token required',
       }[state.status] || 'Not connected');
 }
@@ -152,7 +152,7 @@ $bridgeConnect.addEventListener('click', async () => {
     return;
   }
   if (!token) {
-    renderBridgeState({ status: 'needs-pairing', error: 'Paste the token shown in Axion Desktop settings.' });
+    renderBridgeState({ status: 'needs-pairing', error: 'Paste the token shown in Sennoric Desktop settings.' });
     return;
   }
   $bridgeEnabled.checked = true;
@@ -329,7 +329,7 @@ function toOpenAITools() {
   }));
 }
 
-const SYSTEM = `You are Axion, an AI browser assistant running in a Chrome extension sidebar.
+const SYSTEM = `You are Sennoric, an AI browser assistant running in a Chrome extension sidebar.
 
 You can read and interact with the current webpage using tools: read_page, find_elements, click, type_text, scroll, get_html, get_value, select_option, take_screenshot, navigate, wait_for_page_change.
 
@@ -769,7 +769,7 @@ function saveAll() {
   });
 }
 
-// ── Import from Axion CLI (/web) ──────────────────────────────────────────────
+// ── Import from Sennoric CLI (/web) ──────────────────────────────────────────────
 
 $importBtn.addEventListener('click', async () => {
   $importStatus.textContent = 'Connecting…';
@@ -782,7 +782,7 @@ $importBtn.addEventListener('click', async () => {
     chrome.storage.local.set({ axionCliUrl: baseURL });
     const res = await fetch(`${baseURL}/api/extension-config`, {
       method: 'POST',
-      headers: { 'X-Axion-Import-Token': importToken },
+      headers: { 'X-Sennoric-Import-Token': importToken },
       credentials: 'omit',
       cache: 'no-store',
       signal: AbortSignal.timeout(6000),

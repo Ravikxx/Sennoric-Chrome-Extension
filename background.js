@@ -19,12 +19,12 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.removeAll(() => {
     chrome.contextMenus.create({
       id:       'ask-axion',
-      title:    'Ask Axion: "%s"',
+      title:    'Ask Sennoric: "%s"',
       contexts: ['selection'],
     });
     chrome.contextMenus.create({
       id:       'ask-axion-page',
-      title:    'Ask Axion about this page',
+      title:    'Ask Sennoric about this page',
       contexts: ['page'],
     });
   });
@@ -79,7 +79,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
 });
 
-// ── Local Axion bridge ────────────────────────────────────────────────────────
+// ── Local Sennoric bridge ────────────────────────────────────────────────────────
 
 const BRIDGE_CAPABILITIES = [
   'tabs.list', 'page.read', 'page.html', 'page.find', 'page.value',
@@ -123,7 +123,7 @@ async function connectBridge({ immediate = false } = {}) {
     return;
   }
   if (!config.token) {
-    setBridgeState('needs-pairing', { error: 'Paste the pairing token from Axion Desktop settings.' });
+    setBridgeState('needs-pairing', { error: 'Paste the pairing token from Sennoric Desktop settings.' });
     return;
   }
 
@@ -141,12 +141,12 @@ async function connectBridge({ immediate = false } = {}) {
     void handleBridgeMessage(socket, event.data);
   };
   socket.onerror = () => {
-    setBridgeState('error', { port: config.port, error: 'Could not reach the local Axion bridge.' });
+    setBridgeState('error', { port: config.port, error: 'Could not reach the local Sennoric bridge.' });
   };
   socket.onclose = () => {
     if (bridgeSocket !== socket) return;
     bridgeSocket = null;
-    setBridgeState('waiting', { port: config.port, error: 'Waiting for Axion CLI or Desktop.' });
+    setBridgeState('waiting', { port: config.port, error: 'Waiting for Sennoric CLI or Desktop.' });
     bridgeReconnectTimer = setTimeout(() => void connectBridge(), immediate ? 250 : bridgeRetryMs);
     bridgeRetryMs = Math.min(bridgeRetryMs * 1.7, 15_000);
   };

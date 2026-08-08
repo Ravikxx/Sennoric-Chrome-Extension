@@ -2,7 +2,7 @@
   "name": "@axion-labs-ai/chrome-extension",
   "version": "1.2.0",
   "private": true,
-  "description": "Axion AI browser assistant for Chrome",
+  "description": "Sennoric AI browser assistant for Chrome",
   "type": "module",
   "scripts": {
     "test": "node --test test/*.test.js",
